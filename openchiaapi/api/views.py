@@ -167,8 +167,8 @@ class StatsView(APIView):
 
         try:
             q = query_api.query(
-                textwrap.dedent('''from(bucket: "openchia")
-                  |> range(start: duration(v: "-30m"))
+                textwrap.dedent('''from(bucket: "chia_pool")
+                  |> range(start: duration(v: "-60m"))
                   |> filter(fn: (r) => r["_measurement"] == "pool_size")
                   |> filter(fn: (r) => r["_field"] == "global")
                   |> last()'''),
@@ -196,8 +196,8 @@ class StatsView(APIView):
 
         try:
             q = query_api.query(
-                textwrap.dedent('''from(bucket: "openchia")
-                  |> range(start: duration(v: "-30m"))
+                textwrap.dedent('''from(bucket: "chia_pool")
+                  |> range(start: duration(v: "-60m"))
                   |> filter(fn: (r) => r["_measurement"] == "mempool")
                   |> filter(fn: (r) => r["_field"] == "full_pct")
                   |> last()'''),
@@ -251,8 +251,8 @@ class XCHScanStatsView(APIView):
 
         try:
             q = query_api.query(
-                textwrap.dedent('''from(bucket: "openchia")
-                  |> range(start: duration(v: "-30m"))
+                textwrap.dedent('''from(bucket: "chia_pool")
+                  |> range(start: duration(v: "-60m"))
                   |> filter(fn: (r) => r["_measurement"] == "pool_size")
                   |> filter(fn: (r) => r["_field"] == "global")
                   |> last()'''),
@@ -501,7 +501,7 @@ class LauncherSizeView(APIView):
         every = days_to_every(int(days))
 
         q = query_api.query(
-            textwrap.dedent('''from(bucket: "openchia")
+            textwrap.dedent('''from(bucket: "chia_pool")
               |> range(start: duration(v: _days), stop: now())
               |> filter(fn: (r) => r["_measurement"] == "launcher_size")
               |> filter(fn: (r) => r["launcher"] == _launcher)
@@ -547,7 +547,7 @@ class PoolSizeView(APIView):
         every = days_to_every(int(days))
 
         q = query_api.query(
-            textwrap.dedent('''from(bucket: "openchia")
+            textwrap.dedent('''from(bucket: "chia_pool")
               |> range(start: duration(v: _days), stop: now())
               |> filter(fn: (r) => r["_measurement"] == "pool_size")
               |> aggregateWindow(every: duration(v: _every), fn: mean, createEmpty: false)
@@ -591,7 +591,7 @@ class NetspaceView(APIView):
         every = days_to_every(int(days))
 
         q = query_api.query(
-            textwrap.dedent('''from(bucket: "openchia")
+            textwrap.dedent('''from(bucket: "chia_pool")
               |> range(start: duration(v: _days), stop: now())
               |> filter(fn: (r) => r["_measurement"] == "netspace")
               |> aggregateWindow(every: duration(v: _every), fn: mean, createEmpty: false)
@@ -635,7 +635,7 @@ class XCHPriceView(APIView):
         every = days_to_every(int(days))
 
         q = query_api.query(
-            textwrap.dedent('''from(bucket: "openchia")
+            textwrap.dedent('''from(bucket: "chia_pool")
               |> range(start: duration(v: _days), stop: now())
               |> filter(fn: (r) => r["_measurement"] == "xchprice")
               |> filter(fn: (r) => contains(value: r["_field"], set: ["btc", "eth"]) == false)
@@ -696,7 +696,7 @@ class PartialView(APIView):
 
         q = query_api.query(
             textwrap.dedent(
-                '''from(bucket: "openchia_partial")
+                '''from(bucket: "chia_partial")
               |> range(start: duration(v: _days), stop: now())
               |> filter(fn: (r) => r["_measurement"] == "partial")
               |> filter(fn: (r) => r["launcher"] == _launcher)
@@ -704,7 +704,7 @@ class PartialView(APIView):
               |> aggregateWindow(every: duration(v: _every), fn: sum, createEmpty: true)
               |> yield(name: "sum")
 
-            from(bucket: "openchia_partial")
+            from(bucket: "chia_partial")
               |> range(start: duration(v: _days), stop: now())
               |> filter(fn: (r) => r["_measurement"] == "partial")
               |> filter(fn: (r) => r["launcher"] == _launcher)
@@ -758,7 +758,7 @@ class MempoolView(APIView):
         every = days_to_every(int(days))
 
         q = query_api.query(
-            textwrap.dedent('''from(bucket: "openchia")
+            textwrap.dedent('''from(bucket: "chia_pool")
               |> range(start: duration(v: _days), stop: now())
               |> filter(fn: (r) => r["_measurement"] == "mempool")
               |> aggregateWindow(every: duration(v: _every), fn: mean, createEmpty: false)
