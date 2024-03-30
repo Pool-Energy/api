@@ -1,8 +1,8 @@
-FROM caddy:2.5.2-alpine as caddyimage
+FROM caddy:2.7.6-alpine as caddyimage
 FROM debian:bullseye-slim
 
 # Identify the maintainer of an image
-LABEL maintainer="contact@openchia.io"
+LABEL maintainer="contact@pool.energy"
 
 # Update the image to the latest packages
 RUN apt-get update && apt-get upgrade -y
