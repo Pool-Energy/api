@@ -1,7 +1,4 @@
-http://%%DOMAIN%%:8001 {
-
-        root * /root/api
-
-        file_server /static/*
-
+:8001 {
+    root * /root/api
+    file_server /static/*
 }
