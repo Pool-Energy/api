@@ -198,6 +198,7 @@ class LauncherUpdateSerializer(serializers.Serializer):
     fcm_token = serializers.CharField(required=False, allow_null=True)
     push_missing_partials_hours = serializers.CharField(required=False, allow_null=True)
     push_block_farmed = serializers.BooleanField(required=False)
+    custom_difficulty = serializers.CharField(required=False, allow_null=True)
     minimum_payout = serializers.IntegerField(required=False, allow_null=True)
 
     payment = serializers.MultipleChoiceField(choices=(
