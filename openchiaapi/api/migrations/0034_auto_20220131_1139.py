@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='launcher',
             name='custom_difficulty',
-            field=models.CharField(choices=[('LOWEST', 'Lowest'), ('LOW', 'Low'), ('MEDIUM', 'Medium'), ('HIGH', 'High'), ('HIGHEST', 'Highest')], default=None, help_text='Set a custom difficulty for the launcher to send less or more partials depending on preference', max_length=10, null=True, verbose_name='Custom Difficulty'),
+            field=models.CharField(choices=[('LOWEST', 'Lowest'), ('LOW', 'Low'), ('MEDIUM', 'Medium'), ('HIGH', 'High'), ('HIGHEST', 'Highest')], default=None, help_text='Set a custom difficulty for the launcher to send less or more partials depending on preference', max_length=15, null=True, verbose_name='Custom Difficulty'),
         ),
         migrations.AddField(
             model_name='launcher',
