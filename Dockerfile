@@ -4,6 +4,9 @@ FROM debian:bullseye-slim
 # Identify the maintainer of an image
 LABEL maintainer="contact@pool.energy"
 
+# Define github token argument (used by pip install)
+ARG GITHUB_TOKEN
+
 # Update the image to the latest packages
 RUN apt-get update && apt-get upgrade -y
 
