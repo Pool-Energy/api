@@ -1,5 +1,5 @@
-git+https://${GITHUB_TOKEN}@github.com/pool-energy/chia-blockchain.git@stable/2.1#egg=chia-blockchain
-git+https://${GITHUB_TOKEN}@github.com/pool-energy/pool.git@main#egg=pool
+git+https://${POOLENERGY_GITHUB_TOKEN}@github.com/pool-energy/chia-blockchain.git@stable/2.1#egg=chia-blockchain
+git+https://${POOLENERGY_GITHUB_TOKEN}@github.com/pool-energy/pool.git@main#egg=pool
 djangorestframework==3.14.0
 drf-yasg==1.21.7
 requests==2.25.1
