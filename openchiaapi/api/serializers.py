@@ -34,6 +34,7 @@ class LauncherSerializer(serializers.HyperlinkedModelSerializer):
             'points_pplns',
             'share_pplns',
             'difficulty',
+            'custom_difficulty',
             'is_pool_member',
             'estimated_size',
             'joined_at',
