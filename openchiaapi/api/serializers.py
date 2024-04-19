@@ -217,17 +217,17 @@ class LauncherUpdateSerializer(serializers.Serializer):
     )
 
     def validate_custom_difficulty(self, value):
-        if value.startswith('CUSTOM:'):
+        if value.startswith('CUSTOM:') or value.startswith('EXPERT:'):
             try:
                 difficulty = int(value[7:])
             except Exception:
-                raise serializers.ValidationError('Invalid difficulty')
-            if difficulty < 10:
-                serializers.ValidationError('Farmers should send at least 10 partials per day.')
-            if difficulty < 2000:
-                serializers.ValidationError('Farmers should not send more than 2000 partials per day.')
+                raise serializers.ValidationError(f'Invalid difficulty: {value}')
+            if difficulty < 0:
+                serializers.ValidationError('Difficulty should be greater than 0.')
+            if difficulty > 100000:
+                serializers.ValidationError('Difficulty should be less than 100000.')
         elif value not in ('LOWEST', 'LOW', 'MEDIUM', 'HIGH', 'HIGHEST'):
-            raise serializers.ValidationError('Invalid difficulty')
+            raise serializers.ValidationError(f'Invalid difficulty: {value}')
         return value
 
 
