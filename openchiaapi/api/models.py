@@ -56,7 +56,7 @@ class Launcher(models.Model):
             'on preference'
         ),
         null=True,
-        max_length=10,
+        max_length=15,
         choices=(
             ('LOWEST', 'Lowest'),
             ('LOW', 'Low'),
