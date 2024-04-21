@@ -21,6 +21,6 @@ if [ -n "${GIVEAWAY_ENABLED}" ]; then
 	cron
 fi
 
-caddy run --config /etc/Caddyfile &
+caddy start --config /etc/Caddyfile
 
 exec ../venv/bin/gunicorn -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 openchiaapi.asgi:application
