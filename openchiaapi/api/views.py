@@ -30,7 +30,12 @@ from rest_framework.renderers import BaseRenderer
 from rest_framework.response import Response
 
 from .models import (
-    Block, GlobalInfo, Launcher, Partial, Payout, PayoutAddress,
+    Block,
+    GlobalInfo,
+    Launcher,
+    Partial,
+    Payout,
+    PayoutAddress,
     Notification,
     Transaction,
 )
@@ -79,7 +84,12 @@ class LauncherFilter(django_filters.FilterSet):
     class Meta:
         model = Launcher
         fields = [
-            'points', 'points_pplns', 'share_pplns', 'is_pool_member', 'name', 'launcher_id',
+            'points',
+            'points_pplns',
+            'share_pplns',
+            'is_pool_member',
+            'name',
+            'launcher_id',
             'difficulty',
         ]
 
@@ -118,8 +128,15 @@ class LauncherViewSet(
         s.is_valid(raise_exception=True)
 
         for i in (
-            'name', 'email', 'notify_missing_partials_hours', 'push_missing_partials_hours',
-            'push_block_farmed', 'fcm_token', 'minimum_payout', 'custom_difficulty',
+            'name',
+            'picture_url',
+            'email',
+            'notify_missing_partials_hours',
+            'push_missing_partials_hours',
+            'push_block_farmed',
+            'fcm_token',
+            'minimum_payout',
+            'custom_difficulty',
         ):
             if i in s.validated_data:
                 setattr(launcher, i, s.validated_data[i])
@@ -131,8 +148,12 @@ class LauncherViewSet(
 
         notification_changed = False
         for i in (
-            'size_drop', 'size_drop_interval', 'size_drop_percent',
-            'failed_partials', 'failed_partials_percent', 'payment',
+            'size_drop',
+            'size_drop_interval',
+            'size_drop_percent',
+            'failed_partials',
+            'failed_partials_percent',
+            'payment',
         ):
             if i in s.validated_data:
                 value = s.validated_data[i]

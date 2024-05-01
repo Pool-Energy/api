@@ -29,6 +29,7 @@ class LauncherSerializer(serializers.HyperlinkedModelSerializer):
         fields = [
             'launcher_id',
             'name',
+            'picture_url',
             'p2_singleton_puzzle_hash',
             'points',
             'points_pplns',
@@ -193,6 +194,7 @@ class LauncherSerializer(serializers.HyperlinkedModelSerializer):
 
 class LauncherUpdateSerializer(serializers.Serializer):
     name = serializers.CharField(required=False)
+    picture_url = serializers.URLField(required=False, allow_null=True)
     email = serializers.EmailField(required=False, allow_null=True)
     notify_missing_partials_hours = serializers.CharField(required=False, allow_null=True)
     referrer = serializers.CharField(required=False, allow_null=True)
@@ -218,6 +220,8 @@ class LauncherUpdateSerializer(serializers.Serializer):
     )
 
     def validate_custom_difficulty(self, value):
+        if value is None:
+            return
         if value.startswith('CUSTOM:') or value.startswith('EXPERT:'):
             try:
                 difficulty = int(value[7:])
@@ -229,6 +233,15 @@ class LauncherUpdateSerializer(serializers.Serializer):
                 serializers.ValidationError('Difficulty should be less than 100000.')
         elif value not in ('LOWEST', 'LOW', 'MEDIUM', 'HIGH', 'HIGHEST'):
             raise serializers.ValidationError(f'Invalid difficulty: {value}')
+        return value
+
+    def validate_picture_url(self, value):
+        if value is None:
+            return
+        if not value.startswith('https://'):
+            raise serializers.ValidationError('Picture profile need to start with https:// only.')
+        if not value.endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp')):
+            raise serializers.ValidationError('Support only jpg, jpeg, png, gif and webp format.')
         return value
 
 
