@@ -194,7 +194,7 @@ class LauncherSerializer(serializers.HyperlinkedModelSerializer):
 
 class LauncherUpdateSerializer(serializers.Serializer):
     name = serializers.CharField(required=False)
-    picture_url = serializers.URLField(required=False, allow_null=True)
+    picture_url = serializers.URLField(max_length=1024, required=False, allow_null=True)
     email = serializers.EmailField(required=False, allow_null=True)
     notify_missing_partials_hours = serializers.CharField(required=False, allow_null=True)
     referrer = serializers.CharField(required=False, allow_null=True)

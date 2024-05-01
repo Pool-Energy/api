@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='launcher',
             name='picture_url',
-            field=models.URLField(default=None, null=True),
+            field=models.URLField(max_length=1024, default=None, null=True),
         ),
     ]

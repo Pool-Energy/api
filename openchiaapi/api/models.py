@@ -39,7 +39,7 @@ class Launcher(models.Model):
 
     launcher_id = models.CharField(primary_key=True, max_length=64)
     name = models.CharField(max_length=200, null=True)
-    picture_url = models.URLField(default=None, null=True)
+    picture_url = models.URLField(max_length=1024, default=None, null=True)
     delay_time = models.BigIntegerField()
     delay_puzzle_hash = models.TextField()
     authentication_public_key = models.TextField()
