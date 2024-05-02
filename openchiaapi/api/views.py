@@ -717,7 +717,7 @@ class PartialView(APIView):
 
         q = query_api.query(
             textwrap.dedent(
-                '''from(bucket: "chia_partial")
+            '''from(bucket: "chia_partial")
               |> range(start: duration(v: _days), stop: now())
               |> filter(fn: (r) => r["_measurement"] == "partial")
               |> filter(fn: (r) => r["launcher"] == _launcher)
@@ -732,7 +732,7 @@ class PartialView(APIView):
               |> map(fn: (r) => ({r with error: if r.error != "" then "true" else "false"}))
               |> aggregateWindow(every: duration(v: _every), fn: count, createEmpty: true)
               |> yield(name: "count")
-              '''
+            '''
             ), params=params)
 
         result = []
@@ -751,6 +751,9 @@ class PartialView(APIView):
                     'launcher': r['launcher'],
                     'harvester': r['harvester'],
                     'error': r.values.get('error'),
+                    'plot': r.values.get('plot'),
+                    'version': r.values.get('version'),
+                    'host': r.values.get('host'),
                 }
                 result.append(item)
                 num += 1
