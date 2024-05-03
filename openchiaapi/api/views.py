@@ -717,7 +717,8 @@ class PartialView(APIView):
 
         q = query_api.query(
             textwrap.dedent(
-            '''from(bucket: "chia_partial")
+            '''
+            from(bucket: "chia_partial")
               |> range(start: duration(v: _days), stop: now())
               |> filter(fn: (r) => r["_measurement"] == "partial")
               |> filter(fn: (r) => r["launcher"] == _launcher)
@@ -751,9 +752,6 @@ class PartialView(APIView):
                     'launcher': r['launcher'],
                     'harvester': r['harvester'],
                     'error': r.values.get('error'),
-                    'plot': r.values.get('plot'),
-                    'version': r.values.get('version'),
-                    'host': r.values.get('host'),
                 }
                 result.append(item)
                 num += 1
