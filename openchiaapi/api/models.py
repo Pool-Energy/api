@@ -156,7 +156,7 @@ class Harvester(models.Model):
     class Meta:
         db_table = 'harvester'
 
-    launcher = models.ForeignKey(Launcher, on_delete=models.CASCADE)
+    launcher = models.CharField(max_length=64)
     harvester = models.CharField(max_length=64)
     version = models.CharField(max_length=20, null=True, default=None)
     name = models.CharField(max_length=200, null=True, default=None)
