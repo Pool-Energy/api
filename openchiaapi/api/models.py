@@ -150,6 +150,17 @@ class Partial(models.Model):
     pool_host = models.CharField(max_length=35, null=True, default=None)
 
 
+class Harvester(models.Model):
+
+    class Meta:
+        db_table = 'harvester'
+
+    launcher = models.ForeignKey(Launcher, on_delete=models.CASCADE)
+    harvester = models.CharField(max_length=64)
+    version = models.CharField(max_length=20, null=True, default=None)
+    name = models.CharField(max_length=200, null=True, default=None)
+
+
 class PendingPartial(models.Model):
 
     class Meta:

@@ -34,6 +34,7 @@ from .models import (
     GlobalInfo,
     Launcher,
     Partial,
+    Harvester,
     Payout,
     PayoutAddress,
     Notification,
@@ -46,6 +47,7 @@ from .serializers import (
     LoginSerializer,
     LoginQRSerializer,
     PartialSerializer,
+    HarvesterSerializer,
     PayoutSerializer,
     PayoutAddressSerializer,
     PayoutTransactionSerializer,
@@ -305,7 +307,13 @@ class PartialFilter(django_filters.FilterSet):
 
     class Meta:
         model = Partial
-        fields = ['launcher', 'timestamp']
+        fields = ['launcher', 'harvester_id', 'timestamp']
+
+
+class HarvesterFilter(django_filters.FilterSet):
+    class Meta:
+        model = Harvester
+        fields = ['launcher', 'harvester', 'version']
 
 
 class LoginView(APIView):
@@ -438,10 +446,19 @@ class LoggedInView(APIView):
 class PartialViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Partial.objects.all()
     serializer_class = PartialSerializer
-    filterset_fields = ['launcher', 'timestamp', 'min_timestamp']
+    filterset_fields = ['launcher', 'harvester_id', 'timestamp', 'min_timestamp']
     filterset_class = PartialFilter
     ordering_fields = ['timestamp']
     ordering = ['-timestamp']
+
+
+class HarvesterViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Harvester.objects.all()
+    serializer_class = HarvesterSerializer
+    filterset_fields = ['launcher', 'harvester', 'version']
+    filterset_class = HarvesterFilter
+    ordering_fields = ['launcher', 'harvester', 'version']
+    ordering = ['launcher', 'harvester', 'version']
 
 
 class PayoutViewSet(viewsets.ReadOnlyModelViewSet):
