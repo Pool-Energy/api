@@ -148,6 +148,7 @@ class Partial(models.Model):
     chia_version = models.CharField(max_length=20, null=True, default=None)
     remote = models.CharField(max_length=45, null=True, default=None)
     pool_host = models.CharField(max_length=35, null=True, default=None)
+    time_taken = models.FloatField(default=None, null=True)
 
 
 class Harvester(models.Model):
