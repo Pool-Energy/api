@@ -9,7 +9,7 @@ from rest_framework import serializers
 
 from pool.util import calculate_effort, days_pooling, stay_fee_discount, size_discount
 
-from .models import Block, Launcher, Partial, Payout, PayoutAddress, Transaction
+from .models import Block, Launcher, Partial, Harvester, Payout, PayoutAddress, Transaction
 from .utils import get_pool_fees
 
 
@@ -277,6 +277,12 @@ class PartialSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Partial
         exclude = ['remote']
+
+
+class HarvesterSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Harvester
+        fields = '__all__'
 
 
 class PayoutSerializer(serializers.HyperlinkedModelSerializer):

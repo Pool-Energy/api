@@ -11,6 +11,7 @@ from .views import (
     NetspaceView,
     PartialView,  # timeseries
     PartialViewSet,
+    HarvesterViewSet,
     PayoutAddressViewSet,
     PayoutTransactionViewSet,
     PayoutViewSet,
@@ -28,6 +29,7 @@ router = routers.DefaultRouter()
 router.register('block', BlockViewSet)
 router.register('launcher', LauncherViewSet)
 router.register('partial', PartialViewSet)
+router.register('harvester', HarvesterViewSet)
 router.register('payout', PayoutViewSet)
 router.register('payoutaddress', PayoutAddressViewSet)
 router.register('transaction', TransactionViewSet)
