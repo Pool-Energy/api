@@ -155,6 +155,9 @@ class Harvester(models.Model):
 
     class Meta:
         db_table = 'harvester'
+        constraints = [
+            models.UniqueConstraint(fields=['harvester', 'launcher'], name='unique_launcher_harvester'),
+        ]
 
     launcher = models.CharField(max_length=64)
     harvester = models.CharField(max_length=64)
