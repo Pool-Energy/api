@@ -73,7 +73,7 @@ POOL_TARGET_ADDRESS = get_pool_target_address()
 class BlockViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Block.objects.all()
     serializer_class = BlockSerializer
-    filterset_fields = ['farmed_by', 'payout']
+    filterset_fields = ['farmed_by', 'payout', 'farmed_height']
     ordering_fields = ['confirmed_block_index', 'farmed_height', 'payout']
     ordering = ['-farmed_height']
 
@@ -233,7 +233,7 @@ class StatsView(APIView):
             blockchain_duststorm = False
 
         pi = StatsSerializer(data={
-            'fee': Decimal(pool_info['fee']),
+            'fee': Decimal(pool_info['fee'] if 'fee' in pool_info else 0.01),
             'farmers': farmers_total,
             'farmers_active': farmers_active,
             'rewards_amount': block.aggregate(total=Sum('amount'))['total'],

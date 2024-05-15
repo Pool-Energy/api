@@ -11,7 +11,6 @@ class Block(models.Model):
             models.Index(name='farmed_by_idx', fields=['farmed_by_id']),
         ]
 
-
     name = models.CharField(max_length=64)
     singleton = models.CharField(max_length=64)
     timestamp = models.BigIntegerField()
@@ -20,7 +19,9 @@ class Block(models.Model):
     puzzle_hash = models.CharField(max_length=64)
     amount = models.BigIntegerField()
     absorb_fee = models.IntegerField(default=0)
-    farmed_by = models.ForeignKey('api.Launcher', on_delete=models.SET_NULL, null=True)
+    farmed_by = models.ForeignKey(
+        'api.Launcher', on_delete=models.SET_NULL, null=True
+    )
     launcher_etw = models.BigIntegerField(default=-1)
     launcher_effort = models.IntegerField(default=-1)
     pool_space = models.BigIntegerField(default=0)
@@ -30,6 +31,7 @@ class Block(models.Model):
         'Payout', related_name='blocks', on_delete=models.SET_NULL, null=True, default=None,
     )
     xch_price = models.JSONField(default=None, null=True)
+    gigahorse_fee = models.BooleanField(default=False, null=True)
 
 
 class Launcher(models.Model):
