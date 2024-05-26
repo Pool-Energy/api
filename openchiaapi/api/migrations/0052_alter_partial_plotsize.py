@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='partial',
             name='plot_size',
-            field=models.IntegerFieldField(default=None, null=True),
+            field=models.IntegerField(default=None, null=True),
         ),
     ]
