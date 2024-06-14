@@ -135,6 +135,7 @@ class PoolLogConsumer(AsyncWebsocketConsumer):
             return
 
         data = json.loads(text_data)
+
         for i in ('partials', 'payments'):
             if i in data:
                 if i not in self.subscribed_logs:
