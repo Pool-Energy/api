@@ -152,6 +152,7 @@ class Partial(models.Model):
     pool_host = models.CharField(max_length=35, null=True, default=None)
     time_taken = models.FloatField(default=None, null=True)
     plot_size = models.IntegerField(default=None, null=True)
+    plot_filename = models.CharField(max_length=256, null=True, default=None,)
 
 
 class Harvester(models.Model):
