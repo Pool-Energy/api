@@ -48,6 +48,7 @@ from .serializers import (
     LoginQRSerializer,
     PartialSerializer,
     HarvesterSerializer,
+    HarvesterUpdateSerializer,
     PayoutSerializer,
     PayoutAddressSerializer,
     PayoutTransactionSerializer,
@@ -452,13 +453,47 @@ class PartialViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ['-timestamp']
 
 
-class HarvesterViewSet(viewsets.ReadOnlyModelViewSet):
+class HarvesterViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     queryset = Harvester.objects.all()
     serializer_class = HarvesterSerializer
     filterset_fields = ['launcher', 'harvester', 'version']
     filterset_class = HarvesterFilter
+    search_fields = ['launcher', 'harvester', 'version']
     ordering_fields = ['launcher', 'harvester', 'version']
     ordering = ['launcher', 'harvester', 'version']
+
+    def get_serializer_class(self, *args, **kwargs):
+        if self.request.method == 'PUT':
+            return HarvesterUpdateSerializer
+        return HarvesterSerializer
+
+    def update(self, request, pk):
+        harvester_id = request.session.get('harvester_id')
+        if not harvester_id and request.auth:
+            harvester_id = request.auth.harvester_id
+
+        if not harvester_id or harvester_id != pk:
+            raise NotAuthenticated()
+        harvester = Harvester.objects.filter(harvester_id=pk)
+        if not harvester.exists():
+            raise NotFound()
+        harvester = harvester[0]
+        s = HarvesterUpdateSerializer(data=request.data)
+        s.is_valid(raise_exception=True)
+
+        for i in (
+            'name',
+        ):
+            if i in s.validated_data:
+                setattr(harvester, i, s.validated_data[i])
+
+        harvester.save()
+        return Response(s.validated_data)
 
 
 class PayoutViewSet(viewsets.ReadOnlyModelViewSet):

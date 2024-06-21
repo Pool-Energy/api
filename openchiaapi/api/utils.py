@@ -5,7 +5,6 @@ import requests
 import yaml
 
 from django.conf import settings
-
 from influxdb_client import InfluxDBClient
 
 

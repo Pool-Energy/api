@@ -285,13 +285,21 @@ class HarvesterSerializer(serializers.HyperlinkedModelSerializer):
         fields = '__all__'
 
 
+class HarvesterUpdateSerializer(serializers.Serializer):
+    name = serializers.CharField(required=False)
+
+
 class PayoutSerializer(serializers.HyperlinkedModelSerializer):
     blocks = BlockMinimalSerializer(many=True)
 
     class Meta:
         model = Payout
         fields = (
-            'id', 'datetime', 'amount', 'fee', 'blocks',
+            'id',
+            'datetime',
+            'amount',
+            'fee',
+            'blocks',
         )
 
 
@@ -310,7 +318,12 @@ class PayoutAddressSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = PayoutAddress
         fields = (
-            'id', 'payout', 'puzzle_hash', 'launcher', 'amount', 'transaction',
+            'id',
+            'payout',
+            'puzzle_hash',
+            'launcher',
+            'amount',
+            'transaction',
         )
 
 
