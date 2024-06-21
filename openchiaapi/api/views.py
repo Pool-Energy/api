@@ -473,13 +473,13 @@ class HarvesterViewSet(
         return HarvesterSerializer
 
     def update(self, request, pk):
-        harvester_id = request.session.get('harvester_id')
-        if not harvester_id and request.auth:
-            harvester_id = request.auth.harvester_id
+        launcher_id = request.session.get('launcher_id')
+        if not launcher_id and request.auth:
+            launcher_id = request.auth.launcher_id
 
-        if not harvester_id or harvester_id != pk:
+        if not launcher_id:
             raise NotAuthenticated()
-        harvester = Harvester.objects.filter(harvester_id=pk)
+        harvester = Harvester.objects.filter(launcher=launcher_id)
         if not harvester.exists():
             raise NotFound()
         harvester = harvester[0]
