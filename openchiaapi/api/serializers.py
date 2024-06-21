@@ -286,7 +286,7 @@ class HarvesterSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class HarvesterUpdateSerializer(serializers.Serializer):
-    name = serializers.CharField(required=False)
+    name = serializers.CharField(required=False, allow_null=True)
 
 
 class PayoutSerializer(serializers.HyperlinkedModelSerializer):
