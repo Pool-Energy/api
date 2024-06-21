@@ -476,10 +476,10 @@ class HarvesterViewSet(
         launcher_id = request.session.get('launcher_id')
         if not launcher_id and request.auth:
             launcher_id = request.auth.launcher_id
-
         if not launcher_id:
             raise NotAuthenticated()
-        harvester = Harvester.objects.filter(launcher=launcher_id)
+
+        harvester = Harvester.objects.filter(launcher=launcher_id, harvester=pk)
         if not harvester.exists():
             raise NotFound()
         harvester = harvester[0]
