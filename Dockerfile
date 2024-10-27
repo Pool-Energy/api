@@ -1,5 +1,14 @@
-FROM caddy:2.7.6-alpine as caddyimage
-FROM debian:bullseye-slim
+#####################
+# BUILD ENVIRONMENT #
+#####################
+
+FROM caddy:2.8.4-alpine AS caddy
+
+#####################
+# FINAL ENVIRONMENT #
+#####################
+
+FROM debian:bookworm-slim
 
 # Identify the maintainer of an image
 LABEL maintainer="contact@pool.energy"
@@ -10,6 +19,7 @@ ARG GITHUB_TOKEN
 # Update the image to the latest packages
 RUN apt-get update && apt-get upgrade -y
 
+# Install packages
 RUN apt-get install python3-virtualenv libpq-dev git vim procps net-tools iputils-ping cron -y
 
 EXPOSE 8000
@@ -21,11 +31,9 @@ COPY ./requirements.txt /root
 RUN virtualenv -p python3 venv
 RUN ./venv/bin/pip install -r requirements.txt
 
-COPY ./openchiaapi /root/api
+COPY ./src /root/api
+COPY ./docker/entrypoint.sh /entrypoint.sh
+COPY ./docker/caddy/Caddyfile /etc/Caddyfile
+COPY --from=caddy /usr/bin/caddy /usr/bin/caddy
 
-COPY ./docker/start.sh /root/
-
-COPY ./caddy/Caddyfile /etc/
-COPY --from=caddyimage /usr/bin/caddy /usr/bin/caddy
-
-CMD ["bash", "/root/start.sh"]
+CMD ["bash", "/entrypoint.sh"]

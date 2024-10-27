@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from api.models import Launcher
 from api.serializers import LauncherSerializer
 
-from openchiaapi.utils import custom_settings
+from poolenergyapi.utils import custom_settings
 
 from .models import Giveaway, TicketsRound
 from .serializers import ClosestTicketSerializer, ClosestWinnerSerializer, GiveawaySerializer, TicketsRoundSerializer

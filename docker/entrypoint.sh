@@ -1,4 +1,5 @@
 #!/bin/bash
+
 set -e
 
 export CHIA_ROOT=/data/chia/${CHIA_NETWORK:=mainnet}
@@ -17,10 +18,9 @@ if [ -n "${GIVEAWAY_ENABLED}" ]; then
 		echo "0 0 * * * root cd /root/api && ../venv/bin/python manage.py giveaway_new >> /var/log/cron.log 2>&1" >> /etc/cron.d/giveaway
 	fi
 	echo "1 0 * * * root cd /root/api && ../venv/bin/python manage.py giveaway_round >> /var/log/cron.log 2>&1" >> /etc/cron.d/giveaway
-
 	cron
 fi
 
 caddy start --config /etc/Caddyfile
 
-exec ../venv/bin/gunicorn -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 openchiaapi.asgi:application
+exec ../venv/bin/gunicorn -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 poolenergyapi.asgi:application
