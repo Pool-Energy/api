@@ -22,7 +22,7 @@ from .views import (
     XCHPriceView,
     XCHScanStatsView,
 )
-from giveaway.views import ClosestTicketView, GiveawayViewSet, TicketsViewSet
+
 from referral.views import ReferralViewSet
 
 router = routers.DefaultRouter()
@@ -33,15 +33,12 @@ router.register('harvester', HarvesterViewSet)
 router.register('payout', PayoutViewSet)
 router.register('payoutaddress', PayoutAddressViewSet)
 router.register('transaction', TransactionViewSet)
-
-router.register('giveaway/round', GiveawayViewSet)
-router.register('giveaway/tickets', TicketsViewSet)
 router.register('referral', ReferralViewSet)
 
 app_name = 'api'
+
 urlpatterns = [
     path('', include(router.urls)),
-    path('giveaway/closest', ClosestTicketView.as_view()),
     re_path(r'launcher_size/?', LauncherSizeView.as_view()),
     re_path(r'pool_size/?', PoolSizeView.as_view()),
     re_path(r'stats/mempool/?', MempoolView.as_view()),

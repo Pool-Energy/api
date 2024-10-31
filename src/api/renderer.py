@@ -5,9 +5,7 @@ from rest_framework.renderers import BrowsableAPIRenderer
 class NoHTMLFormBrowsableAPIRenderer(BrowsableAPIRenderer):
 
     def get_rendered_html_form(self, data, view, method, request):
-        if request.path.endswith('/giveaway/closest'):
-            return super().get_rendered_html_form(data, view, method, request)
-        return ''
+        return
 
     def get_raw_data_form(self, data, view, method, request):
         return
