@@ -101,7 +101,6 @@ class Notification(models.Model):
     class Meta:
         db_table = 'notification'
 
-    # FIXME: move other fields from Launcher
     launcher = models.OneToOneField(Launcher, on_delete=models.CASCADE, primary_key=True)
     size_drop = ArrayField(
         models.CharField(choices=(('PUSH', 'Push'), ('EMAIL', 'Email')), max_length=10),

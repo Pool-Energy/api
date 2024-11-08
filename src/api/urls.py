@@ -1,5 +1,6 @@
 from django.urls import include, path, re_path
 from rest_framework import routers
+from referral.views import ReferralViewSet
 from .views import (
     BlockViewSet,
     LauncherSizeView,
@@ -9,7 +10,7 @@ from .views import (
     LoggedInView,
     MempoolView,
     NetspaceView,
-    PartialView,  # timeseries
+    PartialView,
     PartialViewSet,
     HarvesterViewSet,
     PayoutAddressViewSet,
@@ -22,8 +23,6 @@ from .views import (
     XCHPriceView,
     XCHScanStatsView,
 )
-
-from referral.views import ReferralViewSet
 
 router = routers.DefaultRouter()
 router.register('block', BlockViewSet)

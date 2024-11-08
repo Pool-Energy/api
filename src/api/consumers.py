@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import subprocess
+
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 logger = logging.getLogger('api.consumers')
@@ -31,7 +32,6 @@ class LogTask(object):
     async def send(self, data):
         for c in list(self._consumers):
             try:
-                # FIXME: fixed number
                 if len(c.subscribed_logs) != 2:
                     send_data = []
                     for j in data:
@@ -110,6 +110,7 @@ class LogTask(object):
 
 
 class PoolLogConsumer(AsyncWebsocketConsumer):
+
     async def connect(self):
         global LOG_TASK
 

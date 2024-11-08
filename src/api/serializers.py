@@ -1,14 +1,12 @@
 import time
-from datetime import timedelta
 
+from datetime import timedelta
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count, Sum
 from django.db.models.functions import Trunc
 from django.utils import timezone
 from rest_framework import serializers
-
 from pool.util import calculate_effort, days_pooling, stay_fee_discount, size_discount
-
 from .models import Block, Launcher, Partial, Harvester, Payout, PayoutAddress, Transaction
 from .utils import get_pool_fees
 
@@ -17,6 +15,7 @@ POOL_FEES = get_pool_fees()
 
 
 class LauncherSerializer(serializers.HyperlinkedModelSerializer):
+
     points_of_total = serializers.SerializerMethodField('get_points_of_total')
     payout = serializers.SerializerMethodField('get_payout')
     fee = serializers.SerializerMethodField('get_fee')
@@ -193,6 +192,7 @@ class LauncherSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class LauncherUpdateSerializer(serializers.Serializer):
+
     name = serializers.CharField(required=False)
     picture_url = serializers.URLField(max_length=1024, required=False, allow_null=True)
     email = serializers.EmailField(required=False, allow_null=True)
@@ -246,6 +246,7 @@ class LauncherUpdateSerializer(serializers.Serializer):
 
 
 class BlockSerializer(serializers.HyperlinkedModelSerializer):
+
     farmed_by = LauncherSerializer()
 
     class Meta:
@@ -264,32 +265,38 @@ class BlockMinimalSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
+
     launcher_id = serializers.CharField()
     authentication_token = serializers.IntegerField()
     signature = serializers.CharField()
 
 
 class LoginQRSerializer(serializers.Serializer):
+
     token = serializers.CharField(required=True)
 
 
 class PartialSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = Partial
         exclude = ['remote']
 
 
 class HarvesterSerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = Harvester
         fields = '__all__'
 
 
 class HarvesterUpdateSerializer(serializers.Serializer):
+
     name = serializers.CharField(required=False, allow_null=True)
 
 
 class PayoutSerializer(serializers.HyperlinkedModelSerializer):
+
     blocks = BlockMinimalSerializer(many=True)
 
     class Meta:
@@ -311,6 +318,7 @@ class TransactionSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class PayoutAddressSerializer(serializers.HyperlinkedModelSerializer):
+
     launcher = LauncherSerializer()
     payout = PayoutSerializer()
     transaction = TransactionSerializer()
@@ -328,6 +336,7 @@ class PayoutAddressSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class PayoutTransactionSerializer(serializers.Serializer):
+
     transaction_name = serializers.CharField()
     created_at_time = serializers.CharField()
     launcher = serializers.CharField()
@@ -337,6 +346,7 @@ class PayoutTransactionSerializer(serializers.Serializer):
 
 
 class StatsSerializer(serializers.Serializer):
+
     blockchain_duststorm = serializers.BooleanField()
     blockchain_height = serializers.IntegerField()
     blockchain_mempool_full_pct = serializers.IntegerField()
@@ -360,11 +370,13 @@ class StatsSerializer(serializers.Serializer):
 
 
 class SpaceSerializer(serializers.Serializer):
+
     date = serializers.DateTimeField()
     size = serializers.IntegerField()
 
 
 class XCHScanStatsSerializer(serializers.Serializer):
+
     poolInfo = serializers.DictField()
     farmedBlocks = serializers.ListField(
         child=serializers.DictField(),
@@ -374,6 +386,7 @@ class XCHScanStatsSerializer(serializers.Serializer):
 
 
 class TimeseriesSerializer(serializers.Serializer):
+
     datetime = serializers.CharField(required=True)
     field = serializers.IntegerField(required=True)
     value = serializers.IntegerField(required=True)

@@ -28,7 +28,7 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.views import APIView
 from rest_framework.renderers import BaseRenderer
 from rest_framework.response import Response
-
+from referral.utils import update_referral
 from .models import (
     Block,
     GlobalInfo,
@@ -64,7 +64,6 @@ from .utils import (
     get_pool_target_address,
     estimated_time_to_win,
 )
-from referral.utils import update_referral
 
 
 logger = logging.getLogger('api.views')
@@ -72,6 +71,7 @@ POOL_TARGET_ADDRESS = get_pool_target_address()
 
 
 class BlockViewSet(viewsets.ReadOnlyModelViewSet):
+
     queryset = Block.objects.all()
     serializer_class = BlockSerializer
     filterset_fields = ['farmed_by', 'payout', 'farmed_height']
@@ -80,6 +80,7 @@ class BlockViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class LauncherFilter(django_filters.FilterSet):
+
     points__gt = django_filters.NumberFilter(field_name='points', lookup_expr='gt')
     points_pplns__gt = django_filters.NumberFilter(field_name='points_pplns', lookup_expr='gt')
     share_pplns__gt = django_filters.NumberFilter(field_name='share_pplns', lookup_expr='gt')
@@ -97,12 +98,8 @@ class LauncherFilter(django_filters.FilterSet):
         ]
 
 
-class LauncherViewSet(
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet,
-):
+class LauncherViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
+
     queryset = Launcher.objects.all()
     filter_backends = [filters.SearchFilter, DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = LauncherFilter
@@ -304,6 +301,7 @@ class XCHScanStatsView(APIView):
 
 
 class PartialFilter(django_filters.FilterSet):
+
     min_timestamp = django_filters.NumberFilter(field_name='timestamp', lookup_expr='gte')
 
     class Meta:
@@ -312,15 +310,13 @@ class PartialFilter(django_filters.FilterSet):
 
 
 class HarvesterFilter(django_filters.FilterSet):
+
     class Meta:
         model = Harvester
         fields = ['launcher', 'harvester', 'version']
 
 
 class LoginView(APIView):
-    """
-    Login using parameters from chia plotnft.
-    """
 
     @swagger_auto_schema(request_body=LoginSerializer)
     def post(self, request):
@@ -330,7 +326,6 @@ class LoginView(APIView):
         launcher_id = hexstr_to_bytes(s.validated_data["launcher_id"])
         authentication_token = uint64(s.validated_data["authentication_token"])
 
-        # TODO: investigate
         if 'testnet' in os.environ.get('CHIA_NETWORK', ''):
             token_timeout = 10
         else:
@@ -372,9 +367,6 @@ class LoginView(APIView):
 
 
 class LoginQRView(APIView):
-    """
-    Login using QR Code token
-    """
 
     @swagger_auto_schema(request_body=LoginQRSerializer)
     def post(self, request):
@@ -394,6 +386,7 @@ class LoginQRView(APIView):
 
 
 class SVGRenderer(BaseRenderer):
+
     media_type = 'image/svg+xml'
     format = 'svg'
     charset = None
@@ -404,9 +397,6 @@ class SVGRenderer(BaseRenderer):
 
 
 class QRCodeView(APIView):
-    """
-    QR Code for the farmer.
-    """
 
     renderer_classes = [SVGRenderer]
 
@@ -433,9 +423,6 @@ class QRCodeView(APIView):
 
 
 class LoggedInView(APIView):
-    """
-    Get the logged in launcher id.
-    """
 
     @swagger_auto_schema(response_body=LoginSerializer)
     def get(self, request):
@@ -445,6 +432,7 @@ class LoggedInView(APIView):
 
 
 class PartialViewSet(viewsets.ReadOnlyModelViewSet):
+
     queryset = Partial.objects.all()
     serializer_class = PartialSerializer
     filterset_fields = ['launcher', 'harvester_id', 'timestamp', 'min_timestamp']
@@ -453,12 +441,8 @@ class PartialViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ['-timestamp']
 
 
-class HarvesterViewSet(
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet,
-):
+class HarvesterViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
+
     queryset = Harvester.objects.all()
     serializer_class = HarvesterSerializer
     filterset_fields = ['launcher', 'harvester', 'version']
@@ -497,6 +481,7 @@ class HarvesterViewSet(
 
 
 class PayoutViewSet(viewsets.ReadOnlyModelViewSet):
+
     queryset = Payout.objects.all()
     serializer_class = PayoutSerializer
     ordering_fields = ['datetime']
@@ -504,11 +489,13 @@ class PayoutViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class TransactionViewSet(viewsets.ReadOnlyModelViewSet):
+
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
 
 
 class PayoutAddressViewSet(viewsets.ReadOnlyModelViewSet):
+
     queryset = PayoutAddress.objects.all()
     serializer_class = PayoutAddressSerializer
     filterset_fields = ['payout', 'puzzle_hash', 'launcher']
@@ -517,6 +504,7 @@ class PayoutAddressViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class PayoutTransactionViewSet(APIView):
+
     launcher = openapi.Parameter(
         'launcher',
         openapi.IN_QUERY,

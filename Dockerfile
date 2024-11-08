@@ -10,28 +10,26 @@ FROM caddy:2.8.4-alpine AS caddy
 
 FROM debian:bookworm-slim
 
-# Identify the maintainer of an image
 LABEL maintainer="contact@pool.energy"
 
-# Define github token argument (used by pip install)
 ARG GITHUB_TOKEN
 
-# Update the image to the latest packages
-RUN apt-get update && apt-get upgrade -y
-
-# Install packages
-RUN apt-get install python3-virtualenv libpq-dev git vim procps net-tools iputils-ping cron -y
+RUN apt-get update && \
+    apt-get upgrade -y
+RUN apt-get install -y python3-venv python3-dev libpq-dev gcc git vim procps net-tools iputils-ping cron
 
 EXPOSE 8000
 EXPOSE 8001
 
 WORKDIR /root
 
-COPY ./requirements.txt /root
-RUN virtualenv -p python3 venv
+COPY ./requirements.txt .
+RUN python3 -m venv venv
 RUN ./venv/bin/pip install -r requirements.txt
 
-COPY ./src /root/api
+WORKDIR /root/api
+
+COPY ./src .
 COPY ./docker/entrypoint.sh /entrypoint.sh
 COPY ./docker/caddy/Caddyfile /etc/Caddyfile
 COPY --from=caddy /usr/bin/caddy /usr/bin/caddy

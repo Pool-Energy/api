@@ -65,8 +65,10 @@ def days_to_every(days):
         every = '15m'
     elif days <= 7:
         every = '1h'
-    elif days <= 31:
+    elif days <= 30:
         every = '12h'
-    else:
+    elif days <= 90:
         every = '1d'
+    else:
+        every = '2d'
     return every

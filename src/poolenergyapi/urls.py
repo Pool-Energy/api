@@ -15,7 +15,6 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
-
 urlpatterns = [
     path('api/v1.0/', include('api.urls', namespace='v1.0')),
     path('api/auth/', include('rest_framework.urls', namespace='rest_framework')),
