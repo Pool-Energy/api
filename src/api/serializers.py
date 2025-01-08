@@ -365,6 +365,7 @@ class StatsSerializer(serializers.Serializer):
     reward_system = serializers.CharField()
     xch_current_price = serializers.JSONField()
     pool_wallets = serializers.JSONField()
+    pool_nodes = serializers.JSONField()
     average_effort = serializers.IntegerField()
     xch_tb_month = serializers.DecimalField(max_digits=10, decimal_places=9)
 
