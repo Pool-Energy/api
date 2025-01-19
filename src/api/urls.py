@@ -22,6 +22,7 @@ from .views import (
     TransactionViewSet,
     XCHPriceView,
     XCHScanStatsView,
+    GlobalMessageView,
 )
 
 router = routers.DefaultRouter()
@@ -51,4 +52,5 @@ urlpatterns = [
     path('loggedin', LoggedInView.as_view()),
     path('stats', StatsView.as_view()),
     path('xchscan_stats', XCHScanStatsView.as_view()),
+    path('message', GlobalMessageView.as_view()),
 ]

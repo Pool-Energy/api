@@ -32,6 +32,7 @@ from referral.utils import update_referral
 from .models import (
     Block,
     GlobalInfo,
+    GlobalMessage,
     Launcher,
     Partial,
     Harvester,
@@ -56,6 +57,7 @@ from .serializers import (
     TimeseriesSerializer,
     TransactionSerializer,
     XCHScanStatsSerializer,
+    GlobalMessageSerializer,
 )
 from .utils import (
     days_to_every,
@@ -842,3 +844,14 @@ class MempoolView(APIView):
                 })
 
         return Response(result)
+
+
+class GlobalMessageView(APIView):
+    
+    def get(self, request):
+        messages = GlobalMessage.objects.filter(enabled=True)
+        if messages.exists():
+            serializer = GlobalMessageSerializer(messages, many=True)
+        else:
+            serializer = GlobalMessageSerializer(None, many=True)
+        return Response(serializer.data)

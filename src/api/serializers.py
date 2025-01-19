@@ -7,7 +7,7 @@ from django.db.models.functions import Trunc
 from django.utils import timezone
 from rest_framework import serializers
 from pool.util import calculate_effort, days_pooling, stay_fee_discount, size_discount
-from .models import Block, Launcher, Partial, Harvester, Payout, PayoutAddress, Transaction
+from .models import Block, Launcher, Partial, Harvester, Payout, PayoutAddress, Transaction, GlobalMessage
 from .utils import get_pool_fees
 
 
@@ -391,3 +391,12 @@ class TimeseriesSerializer(serializers.Serializer):
     datetime = serializers.CharField(required=True)
     field = serializers.IntegerField(required=True)
     value = serializers.IntegerField(required=True)
+
+
+class GlobalMessageSerializer(serializers.Serializer):
+
+    datetime = serializers.DateTimeField()
+    name = serializers.CharField()
+    message = serializers.CharField()
+    level = serializers.CharField()
+    enabled = serializers.BooleanField()

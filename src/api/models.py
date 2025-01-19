@@ -256,3 +256,15 @@ class GlobalInfo(SingletonModel):
     xch_current_price = models.JSONField(default=dict)
     wallets = models.JSONField(default=dict)
     nodes = models.JSONField(default=dict)
+
+
+class GlobalMessage(models.Model):
+
+    class Meta:
+        db_table = 'globalmessage'
+
+    name = models.CharField(max_length=200, null=False)
+    message = models.CharField(null=False)
+    datetime = models.DateTimeField(auto_now_add=True)
+    level = models.CharField(max_length=50, default='info', null=False)
+    enabled = models.BooleanField(default=False)
