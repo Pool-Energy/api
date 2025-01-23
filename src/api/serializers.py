@@ -45,6 +45,7 @@ class LauncherSerializer(serializers.HyperlinkedModelSerializer):
             'blocks',
             'partials',
             'rewards',
+            'message',
         ]
 
     def get_points_of_total(self, instance):

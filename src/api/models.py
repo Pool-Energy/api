@@ -91,6 +91,7 @@ class Launcher(models.Model):
     qrcode_token = models.CharField(max_length=64, default=None, null=True, db_index=True)
     push_missing_partials_hours = models.IntegerField(null=True, default=None)
     push_block_farmed = models.BooleanField(default=True)
+    message = models.CharField(default=None, null=True)
 
     def is_authenticated(self):
         return False
