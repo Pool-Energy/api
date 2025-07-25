@@ -1,5 +1,6 @@
 git+https://github.com/pool-energy/chia-blockchain.git@stable/2.5#egg=chia-blockchain
 git+https://github.com/pool-energy/pool.git@main#egg=pool
+chia_rs==0.20.0
 djangorestframework==3.15.2
 drf-yasg==1.21.8
 requests==2.32.3
