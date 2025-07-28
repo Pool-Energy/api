@@ -6,7 +6,7 @@ drf-yasg==1.21.8
 requests==2.32.4
 django-filter==24.3
 psycopg2==2.9.10
-channels==4.2.0
+channels==4.3.0
 cachetools==5.5.0
 qrcode==8.0
 pytz==2024.2
