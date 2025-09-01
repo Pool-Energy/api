@@ -2,7 +2,7 @@ git+https://github.com/pool-energy/chia-blockchain.git@stable/2.5#egg=chia-block
 git+https://github.com/pool-energy/pool.git@main#egg=pool
 chia_rs==0.20.0
 djangorestframework==3.16.1
-drf-yasg==1.21.8
+drf-yasg==1.21.10
 requests==2.32.4
 django-filter==25.1
 psycopg2==2.9.10
