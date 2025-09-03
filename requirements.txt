@@ -10,7 +10,7 @@ channels==4.3.1
 cachetools==5.5.0
 qrcode==8.2
 pytz==2025.2
-influxdb-client==1.48.0
+influxdb-client==1.49.0
 py-spy==0.4.1
 uvicorn==0.35.0
 gunicorn==23.0.0
