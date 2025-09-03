@@ -3,7 +3,7 @@ git+https://github.com/pool-energy/pool.git@main#egg=pool
 chia_rs==0.20.0
 djangorestframework==3.16.1
 drf-yasg==1.21.10
-requests==2.32.4
+requests==2.32.5
 django-filter==25.1
 psycopg2==2.9.10
 channels==4.3.1
