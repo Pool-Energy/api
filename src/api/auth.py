@@ -1,3 +1,4 @@
+from drf_spectacular.extensions import OpenApiAuthenticationExtension
 from rest_framework import authentication
 from rest_framework import exceptions
 from .models import Launcher
@@ -17,3 +18,15 @@ class TokenAuthentication(authentication.BaseAuthentication):
             return launcher[0], launcher[0]
         else:
             raise exceptions.AuthenticationFailed()
+
+
+class TokenAuthenticationScheme(OpenApiAuthenticationExtension):
+    target_class = TokenAuthentication
+    name = 'TokenAuth'
+
+    def get_security_definition(self, auto_schema):
+        return {
+            'type': 'http',
+            'scheme': 'bearer',
+            'bearerFormat': 'Token',
+        }

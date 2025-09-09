@@ -22,7 +22,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'api',
     'referral',
-    'drf_yasg',
+    'drf_spectacular',
     'django_filters',
     'channels',
 ]
@@ -48,7 +48,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '1000/hour',
-    }
+    },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 MIDDLEWARE = [
@@ -78,6 +79,33 @@ TEMPLATES = [
         },
     },
 ]
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Pool.Energy API',
+    'DESCRIPTION': 'API Resources Documentation',
+    'VERSION': 'v1.0',
+    'SERVERS': [],
+    'CONTACT': {
+        'name': 'Pool.Energy',
+        'url': 'https://pool.energy',
+        'email': 'contact@pool.energy'
+    },
+    'LICENSE': {
+        'name': 'AGPL-3.0 License',
+        'url': 'https://www.gnu.org/licenses/agpl-3.0.html',
+    },
+    'SCHEMA_PATH_PREFIX': '/api/v1.0',
+    'SCHEMA_PATH_PREFIX_TRIM': '/api/v1.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SWAGGER_UI_SETTINGS': {
+        'filter': True,
+        'deepLinking': True,
+    },
+    'POSTPROCESSING_HOOKS': [
+        'poolenergyapi.utils.drf_version',
+        'poolenergyapi.utils.drf_servers',
+    ],
+}
 
 WSGI_APPLICATION = 'poolenergyapi.wsgi.application'
 
