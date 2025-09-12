@@ -1,5 +1,4 @@
 from django.utils import timezone
-
 from api.models import Launcher
 from referral.models import Referral
 

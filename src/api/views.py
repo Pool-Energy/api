@@ -7,13 +7,6 @@ import qrcode
 import qrcode.image.svg
 import textwrap
 
-from chia_rs import AugSchemeMPL, G1Element, G2Element
-from chia.pools.pool_wallet_info import PoolState
-from chia.protocols.pool_protocol import validate_authentication_token, AuthenticationPayload
-from chia.util.bech32m import decode_puzzle_hash
-from chia.util.byte_types import hexstr_to_bytes
-from chia.util.hash import std_hash
-from chia.util.ints import uint64
 from datetime import datetime
 from decimal import Decimal
 from django.core.exceptions import ObjectDoesNotExist
@@ -29,6 +22,20 @@ from rest_framework.views import APIView
 from rest_framework.renderers import BaseRenderer
 from rest_framework.response import Response
 from referral.utils import update_referral
+
+from chia.pools.pool_wallet_info import PoolState
+from chia.protocols.pool_protocol import validate_authentication_token, AuthenticationPayload
+from chia.util.bech32m import decode_puzzle_hash
+from chia.util.byte_types import hexstr_to_bytes
+from chia.util.hash import std_hash
+
+from chia_rs.sized_ints import uint64
+from chia_rs import (
+    AugSchemeMPL,
+    G1Element,
+    G2Element,
+)
+
 from .models import (
     Block,
     GlobalInfo,

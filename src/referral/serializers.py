@@ -1,7 +1,7 @@
 from rest_framework import serializers
+from api.serializers import LauncherSerializer
 
 from .models import Referral
-from api.serializers import LauncherSerializer
 
 
 class ReferralSerializer(serializers.HyperlinkedModelSerializer):
