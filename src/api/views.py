@@ -7,21 +7,14 @@ import qrcode
 import qrcode.image.svg
 import textwrap
 
-from chia_rs import AugSchemeMPL, G1Element, G2Element
-from chia.pools.pool_wallet_info import PoolState
-from chia.protocols.pool_protocol import validate_authentication_token, AuthenticationPayload
-from chia.util.bech32m import decode_puzzle_hash
-from chia.util.byte_types import hexstr_to_bytes
-from chia.util.hash import std_hash
-from chia.util.ints import uint64
 from datetime import datetime
 from decimal import Decimal
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Avg, F, Sum, Q
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import rest_framework as django_filters
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 from rest_framework import filters, mixins, serializers, viewsets
 from rest_framework.exceptions import NotAuthenticated, NotFound
 from rest_framework.pagination import LimitOffsetPagination
@@ -29,6 +22,20 @@ from rest_framework.views import APIView
 from rest_framework.renderers import BaseRenderer
 from rest_framework.response import Response
 from referral.utils import update_referral
+
+from chia.pools.pool_wallet_info import PoolState
+from chia.protocols.pool_protocol import validate_authentication_token, AuthenticationPayload
+from chia.util.bech32m import decode_puzzle_hash
+from chia.util.byte_types import hexstr_to_bytes
+from chia.util.hash import std_hash
+
+from chia_rs.sized_ints import uint64
+from chia_rs import (
+    AugSchemeMPL,
+    G1Element,
+    G2Element,
+)
+
 from .models import (
     Block,
     GlobalInfo,
@@ -72,6 +79,20 @@ logger = logging.getLogger('api.views')
 POOL_TARGET_ADDRESS = get_pool_target_address()
 
 
+@extend_schema_view(
+    list=extend_schema(
+        auth=[],
+        description='List all blocks.',
+        methods=['GET'],
+        responses={200: BlockSerializer(many=True)},
+    ),
+    retrieve=extend_schema(
+        auth=[],
+        description='Retrieve a specific block.',
+        methods=['GET'],
+        responses={200: BlockSerializer(many=False)},
+    ),
+)
 class BlockViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Block.objects.all()
@@ -100,6 +121,30 @@ class LauncherFilter(django_filters.FilterSet):
         ]
 
 
+@extend_schema_view(
+    list=extend_schema(
+        auth=[],
+        description='List all farmers.',
+        methods=['GET'],
+        responses={200: LauncherSerializer(many=True)},
+    ),
+    retrieve=extend_schema(
+        auth=[],
+        description='Retrieve a specific farmer.',
+        methods=['GET'],
+        responses={200: LauncherSerializer(many=False)},
+    ),
+    update=extend_schema(
+        description='Update a specific farmer.',
+        methods=['PUT'],
+        responses={200: LauncherSerializer(many=False)},
+    ),
+    partial_update=extend_schema(
+        description='Partially update a specific farmer.',
+        methods=['PATCH'],
+        responses={200: LauncherSerializer(many=False)},
+    ),
+)
 class LauncherViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
 
     queryset = Launcher.objects.all()
@@ -177,7 +222,12 @@ class LauncherViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.U
 
 class StatsView(APIView):
 
-    @swagger_auto_schema(responses={200: StatsSerializer(many=False)})
+    @extend_schema(
+        auth=[],
+        description='Get statistics about the pool.',
+        methods=['GET'],
+        responses={200: StatsSerializer(many=False)}
+    )
     def get(self, request, format=None):
         block = Block.objects.order_by('-confirmed_block_index')
         farmers = Launcher.objects.filter(is_pool_member=True)
@@ -264,7 +314,12 @@ class StatsView(APIView):
 
 class XCHScanStatsView(APIView):
 
-    @swagger_auto_schema(responses={200: XCHScanStatsSerializer(many=False)})
+    @extend_schema(
+        auth=[],
+        description='Get statistics about the pool from XCHScan.',
+        methods=['GET'],
+        responses={200: XCHScanStatsSerializer(many=False)},
+    )
     def get(self, request, format=None):
         block = Block.objects.order_by('-confirmed_block_index')
         farmers = Launcher.objects.filter(is_pool_member=True).count()
@@ -321,7 +376,12 @@ class HarvesterFilter(django_filters.FilterSet):
 
 class LoginView(APIView):
 
-    @swagger_auto_schema(request_body=LoginSerializer)
+    @extend_schema(
+        auth=[],
+        request=LoginSerializer,
+        methods=['POST'],
+        responses={200: OpenApiTypes.OBJECT},
+    )
     def post(self, request):
         s = LoginSerializer(data=request.data)
         s.is_valid(raise_exception=True)
@@ -371,7 +431,12 @@ class LoginView(APIView):
 
 class LoginQRView(APIView):
 
-    @swagger_auto_schema(request_body=LoginQRSerializer)
+    @extend_schema(
+        auth=[],
+        request=LoginQRSerializer,
+        methods=['POST'],
+        responses={200: OpenApiTypes.OBJECT},
+    )
     def post(self, request):
         s = LoginQRSerializer(data=request.data)
         s.is_valid(raise_exception=True)
@@ -403,6 +468,12 @@ class QRCodeView(APIView):
 
     renderer_classes = [SVGRenderer]
 
+    @extend_schema(
+        auth=[],
+        description='Get the QR code for login.',
+        methods=['GET'],
+        responses={200: OpenApiTypes.BINARY},
+    )
     def get(self, request):
         launcher_id = request.session.get('launcher_id')
         if not launcher_id:
@@ -427,13 +498,32 @@ class QRCodeView(APIView):
 
 class LoggedInView(APIView):
 
-    @swagger_auto_schema(response_body=LoginSerializer)
+    @extend_schema(
+        auth=[],
+        description='Check if the user is logged in.',
+        methods=['GET'],
+        responses={200: OpenApiTypes.OBJECT},
+    )
     def get(self, request):
         return Response({
             'launcher_id': request.session.get('launcher_id'),
         })
 
 
+@extend_schema_view(
+    list=extend_schema(
+        auth=[],
+        description='List all partials.',
+        methods=['GET'],
+        responses={200: PartialSerializer(many=True)},
+    ),
+    retrieve=extend_schema(
+        auth=[],
+        description='Retrieve a specific partial.',
+        methods=['GET'],
+        responses={200: PartialSerializer(many=False)},
+    ),
+)
 class PartialViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Partial.objects.all()
@@ -444,6 +534,30 @@ class PartialViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ['-timestamp']
 
 
+@extend_schema_view(
+    list=extend_schema(
+        auth=[],
+        description='List all harvesters.',
+        methods=['GET'],
+        responses={200: HarvesterSerializer(many=True)},
+    ),
+    retrieve=extend_schema(
+        auth=[],
+        description='Retrieve a specific harvester.',
+        methods=['GET'],
+        responses={200: HarvesterSerializer(many=False)},
+    ),
+    update=extend_schema(
+        description='Update a specific harvester.',
+        methods=['PUT'],
+        responses={200: HarvesterSerializer(many=False)},
+    ),
+    partial_update=extend_schema(
+        description='Partially update a specific harvester.',
+        methods=['PATCH'],
+        responses={200: HarvesterSerializer(many=False)},
+    ),
+)
 class HarvesterViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
 
     queryset = Harvester.objects.all()
@@ -483,6 +597,20 @@ class HarvesterViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.
         return Response(s.validated_data)
 
 
+@extend_schema_view(
+    list=extend_schema(
+        auth=[],
+        description='List all payouts.',
+        methods=['GET'],
+        responses={200: PayoutSerializer(many=True)},
+    ),
+    retrieve=extend_schema(
+        auth=[],
+        description='Retrieve a specific payout.',
+        methods=['GET'],
+        responses={200: PayoutSerializer(many=False)},
+    ),
+)
 class PayoutViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Payout.objects.all()
@@ -491,12 +619,40 @@ class PayoutViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ['-datetime']
 
 
+@extend_schema_view(
+    list=extend_schema(
+        auth=[],
+        description='List all transactions.',
+        methods=['GET'],
+        responses={200: TransactionSerializer(many=True)},
+    ),
+    retrieve=extend_schema(
+        auth=[],
+        description='Retrieve a specific transaction.',
+        methods=['GET'],
+        responses={200: TransactionSerializer(many=False)},
+    ),
+)
 class TransactionViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
 
 
+@extend_schema_view(
+    list=extend_schema(
+        auth=[],
+        description='List all payout addresses.',
+        methods=['GET'],
+        responses={200: PayoutAddressSerializer(many=True)},
+    ),
+    retrieve=extend_schema(
+        auth=[],
+        description='Retrieve a specific payout address.',
+        methods=['GET'],
+        responses={200: PayoutAddressSerializer(many=False)},
+    ),
+)
 class PayoutAddressViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = PayoutAddress.objects.all()
@@ -508,15 +664,20 @@ class PayoutAddressViewSet(viewsets.ReadOnlyModelViewSet):
 
 class PayoutTransactionViewSet(APIView):
 
-    launcher = openapi.Parameter(
-        'launcher',
-        openapi.IN_QUERY,
-        type=openapi.TYPE_STRING,
-    )
-
-    @swagger_auto_schema(
-        manual_parameters=[launcher],
-        responses={200: PayoutTransactionSerializer(many=True)}
+    @extend_schema(
+        auth=[],
+        description='List all payout transactions, optionally filtered by launcher.',
+        methods=['GET'],
+        parameters=[
+            OpenApiParameter(
+                name='launcher',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Launcher ID',
+                required=False,
+            ),
+        ],
+        responses={200: PayoutTransactionSerializer(many=True)},
     )
     def get(self, request, format=None):
         paginator = LimitOffsetPagination()
@@ -539,22 +700,26 @@ class PayoutTransactionViewSet(APIView):
 
 class LauncherSizeView(APIView):
 
-    days_param = openapi.Parameter(
-        'days',
-        openapi.IN_QUERY,
-        description='Number of days (default: 7)',
-        type=openapi.TYPE_INTEGER,
-    )
-
-    launcher = openapi.Parameter(
-        'launcher',
-        openapi.IN_QUERY,
-        description='Launcher ID',
-        type=openapi.TYPE_STRING,
-    )
-
-    @swagger_auto_schema(
-        manual_parameters=[days_param, launcher],
+    @extend_schema(
+        auth=[],
+        description='Get the size of a specific launcher over time.',
+        methods=['GET'],
+        parameters=[
+            OpenApiParameter(
+                name='days',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Number of days (default: 7)',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='launcher',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Launcher ID',
+                required=True,
+            ),
+        ],
         responses={200: TimeseriesSerializer(many=True)},
     )
     def get(self, request, format=None):
@@ -592,15 +757,19 @@ class LauncherSizeView(APIView):
 
 class PoolSizeView(APIView):
 
-    days_param = openapi.Parameter(
-        'days',
-        openapi.IN_QUERY,
-        description='Number of days (default: 7)',
-        type=openapi.TYPE_INTEGER,
-    )
-
-    @swagger_auto_schema(
-        manual_parameters=[days_param],
+    @extend_schema(
+        auth=[],
+        description='Get the total pool size over time.',
+        methods=['GET'],
+        parameters=[
+            OpenApiParameter(
+                name='days',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Number of days (default: 7)',
+                required=False,
+            ),
+        ],
         responses={200: TimeseriesSerializer(many=True)},
     )
     def get(self, request, format=None):
@@ -636,15 +805,19 @@ class PoolSizeView(APIView):
 
 class NetspaceView(APIView):
 
-    days_param = openapi.Parameter(
-        'days',
-        openapi.IN_QUERY,
-        description='Number of days (default: 7)',
-        type=openapi.TYPE_INTEGER,
-    )
-
-    @swagger_auto_schema(
-        manual_parameters=[days_param],
+    @extend_schema(
+        auth=[],
+        description='Get the total Chia netspace over time.',
+        methods=['GET'],
+        parameters=[
+            OpenApiParameter(
+                name='days',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Number of days (default: 7)',
+                required=False,
+            ),
+        ],
         responses={200: TimeseriesSerializer(many=True)},
     )
     def get(self, request, format=None):
@@ -680,15 +853,19 @@ class NetspaceView(APIView):
 
 class XCHPriceView(APIView):
 
-    days_param = openapi.Parameter(
-        'days',
-        openapi.IN_QUERY,
-        description='Number of days (default: 7)',
-        type=openapi.TYPE_INTEGER,
-    )
-
-    @swagger_auto_schema(
-        manual_parameters=[days_param],
+    @extend_schema(
+        auth=[],
+        description='Get the XCH price over time.',
+        methods=['GET'],
+        parameters=[
+            OpenApiParameter(
+                name='days',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Number of days (default: 7)',
+                required=False,
+            ),
+        ],
         responses={200: TimeseriesSerializer(many=True)},
     )
     def get(self, request, format=None):
@@ -725,21 +902,26 @@ class XCHPriceView(APIView):
 
 class PartialView(APIView):
 
-    launcher = openapi.Parameter(
-        'launcher',
-        openapi.IN_QUERY,
-        description='Launcher ID',
-        type=openapi.TYPE_STRING,
-    )
-    days_param = openapi.Parameter(
-        'days',
-        openapi.IN_QUERY,
-        description='Number of days (default: 7)',
-        type=openapi.TYPE_INTEGER,
-    )
-
-    @swagger_auto_schema(
-        manual_parameters=[days_param, launcher],
+    @extend_schema(
+        auth=[],
+        description='Get the number of partials submitted over time, filtered by launcher.',
+        methods=['GET'],
+        parameters=[
+            OpenApiParameter(
+                name='days',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Number of days (default: 7)',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='launcher',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Launcher ID',
+                required=True,
+            ),
+        ],
         responses={200: TimeseriesSerializer(many=True)},
     )
     def get(self, request, format=None):
@@ -804,15 +986,19 @@ class PartialView(APIView):
 
 class MempoolView(APIView):
 
-    days_param = openapi.Parameter(
-        'days',
-        openapi.IN_QUERY,
-        description='Number of days (default: 7)',
-        type=openapi.TYPE_INTEGER,
-    )
-
-    @swagger_auto_schema(
-        manual_parameters=[days_param],
+    @extend_schema(
+        auth=[],
+        description='Get mempool stats over time.',
+        methods=['GET'],
+        parameters=[
+            OpenApiParameter(
+                name='days',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Number of days (default: 7)',
+                required=False,
+            ),
+        ],
         responses={200: TimeseriesSerializer(many=True)},
     )
     def get(self, request, format=None):
@@ -848,6 +1034,12 @@ class MempoolView(APIView):
 
 class GlobalMessageView(APIView):
     
+    @extend_schema(
+        auth=[],
+        description='Get pool messages.',
+        methods=['GET'],
+        responses={200: GlobalMessageSerializer(many=True)}
+    )
     def get(self, request):
         messages = GlobalMessage.objects.filter(enabled=True)
         if messages.exists():

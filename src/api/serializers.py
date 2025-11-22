@@ -7,6 +7,7 @@ from django.db.models.functions import Trunc
 from django.utils import timezone
 from rest_framework import serializers
 from pool.util import calculate_effort, days_pooling, stay_fee_discount, size_discount
+
 from .models import Block, Launcher, Partial, Harvester, Payout, PayoutAddress, Transaction, GlobalMessage
 from .utils import get_pool_fees
 
@@ -48,10 +49,10 @@ class LauncherSerializer(serializers.HyperlinkedModelSerializer):
             'message',
         ]
 
-    def get_points_of_total(self, instance):
+    def get_points_of_total(self, instance) -> float:
         return float(instance.share_pplns)
 
-    def get_fee(self, instance):
+    def get_fee(self, instance) -> dict:
         if 'view' not in self.context or self.context['view'].get_view_name() != 'Launcher Instance':
             return {}
         days = days_pooling(instance.joined_last_at, instance.left_last_at, instance.is_pool_member)
@@ -68,7 +69,7 @@ class LauncherSerializer(serializers.HyperlinkedModelSerializer):
             'final': POOL_FEES['pool'] * (1 - stay_length - size),
         }
 
-    def get_payout(self, instance):
+    def get_payout(self, instance) -> dict:
         if 'view' not in self.context or self.context['view'].get_view_name() != 'Launcher Instance':
             return {}
         return {
@@ -85,14 +86,14 @@ class LauncherSerializer(serializers.HyperlinkedModelSerializer):
             )['transactions']
         }
 
-    def get_blocks(self, instance):
+    def get_blocks(self, instance) -> dict:
         if 'view' not in self.context or self.context['view'].get_view_name() != 'Launcher Instance':
             return {}
         return {
             'total': instance.block_set.all().count(),
         }
 
-    def get_partials(self, instance):
+    def get_partials(self, instance) -> dict:
         if 'view' not in self.context or self.context['view'].get_view_name() != 'Launcher Instance':
             return {}
         last_day = instance.partial_set.filter(timestamp__gte=int(time.time()) - 60 * 60 * 24)
@@ -108,7 +109,7 @@ class LauncherSerializer(serializers.HyperlinkedModelSerializer):
             'harvesters': last_day.aggregate(num=Count('harvester_id', distinct=True))['num'],
         }
 
-    def get_rewards(self, instance):
+    def get_rewards(self, instance) -> dict:
         if 'view' not in self.context or self.context['view'].get_view_name() != 'Launcher Instance':
             return {}
         pa = PayoutAddress.objects.filter(launcher=instance)
@@ -145,7 +146,7 @@ class LauncherSerializer(serializers.HyperlinkedModelSerializer):
             'last_per_day': last_per_day,
         }
 
-    def to_representation(self, instance):
+    def to_representation(self, instance) -> dict:
         ret = super().to_representation(instance)
         if (self.context['request'].auth and
                 self.context['request'].auth.launcher_id == ret['launcher_id']) or \

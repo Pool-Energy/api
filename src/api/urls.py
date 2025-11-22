@@ -1,6 +1,7 @@
 from django.urls import include, path, re_path
 from rest_framework import routers
 from referral.views import ReferralViewSet
+
 from .views import (
     BlockViewSet,
     LauncherSizeView,
@@ -24,6 +25,7 @@ from .views import (
     XCHScanStatsView,
     GlobalMessageView,
 )
+
 
 router = routers.DefaultRouter()
 router.register('block', BlockViewSet)
