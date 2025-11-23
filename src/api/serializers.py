@@ -402,3 +402,4 @@ class GlobalMessageSerializer(serializers.Serializer):
     message = serializers.CharField()
     level = serializers.CharField()
     enabled = serializers.BooleanField()
+    closing = serializers.BooleanField()

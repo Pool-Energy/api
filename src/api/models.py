@@ -269,3 +269,4 @@ class GlobalMessage(models.Model):
     datetime = models.DateTimeField(auto_now_add=True)
     level = models.CharField(max_length=50, default='info', null=False)
     enabled = models.BooleanField(default=False)
+    closing = models.BooleanField(default=True, null=True)
