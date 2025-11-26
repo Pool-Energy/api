@@ -12,6 +12,6 @@ qrcode==8.2
 pytz==2025.2
 influxdb-client==1.49.0
 py-spy==0.4.1
-uvicorn==0.35.0
+uvicorn==0.38.0
 gunicorn==23.0.0
 websockets==15.0.1
