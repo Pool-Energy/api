@@ -13,5 +13,5 @@ pytz==2025.2
 influxdb-client==1.50.0
 py-spy==0.4.1
 uvicorn==0.40.0
-gunicorn==25.0.3
+gunicorn==25.1.0
 websockets==16.0
