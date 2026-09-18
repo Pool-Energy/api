@@ -24,7 +24,7 @@ from rest_framework.response import Response
 from referral.utils import update_referral
 
 from chia.pools.pool_wallet_info import PoolState
-from chia.protocols.pool_protocol import validate_authentication_token, AuthenticationPayload
+from chia.protocols.pool_protocol import validate_authentication_token, AuthenticationPayloadV1
 from chia.util.bech32m import decode_puzzle_hash
 from chia.util.byte_types import hexstr_to_bytes
 from chia.util.hash import std_hash
@@ -404,7 +404,7 @@ class LoginView(APIView):
 
         signature = G2Element.from_bytes(hexstr_to_bytes(s.validated_data["signature"]))
         message = std_hash(
-            AuthenticationPayload(
+            AuthenticationPayloadV1(
                 "get_login",
                 launcher_id,
                 PoolState.from_bytes(launcher.singleton_tip_state).target_puzzle_hash,
