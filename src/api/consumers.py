@@ -4,7 +4,11 @@ import logging
 import os
 import subprocess
 
+import redis.asyncio as aioredis
+
 from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.layers import get_channel_layer
+from django.conf import settings
 
 
 logger = logging.getLogger('api.consumers')
@@ -145,3 +149,167 @@ class PoolLogConsumer(AsyncWebsocketConsumer):
             else:
                 if i in self.subscribed_logs:
                     self.subscribed_logs.remove(i)
+
+
+# ================================================================================
+# Live data (blocks, partials, payouts, pool status) via redis pub/sub
+# ================================================================================
+#
+# `pool` (a separate asyncio process) publishes JSON events on redis pub/sub
+# channels named `live:<kind>:<scope>` (see pool/pool/store/redis_store.py).
+# `RedisRelay` below subscribes to `live:*` and re-broadcasts every message to
+# the matching Django Channels group, which the WebSocket consumers below
+# join depending on the page/launcher they represent.
+#
+# NOTE: this relay is started once per ASGI *process* (singleton, same pattern
+# as `LOG_TASK` above). The current deployment runs a single gunicorn worker
+# (see api/docker/entrypoint.sh, no `-w` flag), so this is safe. If the
+# deployment ever moves to multiple workers/replicas, this relay MUST be
+# extracted into its own dedicated process (e.g. a `manage.py` command),
+# otherwise every worker would re-publish the same event and clients would
+# receive duplicated messages.
+
+REDIS_RELAY = None
+
+
+def _group_name_for_channel(channel: str) -> str:
+    # e.g. "live:partial:all" -> "live_partial_all"
+    #      "live:partial:<launcher_id>" -> "live_partial_<launcher_id>"
+    return channel.replace(':', '_')
+
+
+class RedisRelay(object):
+
+    def __init__(self):
+        self._task: asyncio.Task | None = None
+
+    async def start(self):
+        self._task = asyncio.create_task(self.run())
+
+    async def run(self):
+        global REDIS_RELAY
+
+        channel_layer = get_channel_layer()
+        client = aioredis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
+
+        try:
+            pubsub = client.pubsub()
+            await pubsub.psubscribe('live:*')
+
+            async for message in pubsub.listen():
+                if message is None:
+                    continue
+                if message.get('type') != 'pmessage':
+                    continue
+
+                channel = message['channel']
+                if isinstance(channel, bytes):
+                    channel = channel.decode()
+
+                data = message['data']
+                if isinstance(data, bytes):
+                    data = data.decode()
+
+                try:
+                    payload = json.loads(data)
+                except ValueError:
+                    logger.warning('Failed to decode live event on channel %r', channel)
+                    continue
+
+                group = _group_name_for_channel(channel)
+                # channel is "live:<kind>:<scope>" or "live:<kind>" (pool_status)
+                kind = channel.split(':')[1] if ':' in channel else channel
+                try:
+                    await channel_layer.group_send(group, {
+                        'type': 'live.message',
+                        'kind': kind,
+                        'payload': payload,
+                    })
+                except Exception:
+                    logger.error('Failed to relay live event to group %r', group, exc_info=True)
+        except Exception:
+            logger.error('Redis relay stopped unexpectedly', exc_info=True)
+        finally:
+            REDIS_RELAY = None
+
+
+class LiveGroupConsumer(AsyncWebsocketConsumer):
+    """
+    Base class for WebSocket consumers that just join one or more Channels
+    groups fed by `RedisRelay` and forward every message to the client as-is.
+    Subclasses must implement `get_groups()`.
+    """
+
+    def get_groups(self) -> list:
+        raise NotImplementedError
+
+    async def connect(self):
+        global REDIS_RELAY
+
+        await self.accept()
+
+        if REDIS_RELAY is None:
+            REDIS_RELAY = RedisRelay()
+            await REDIS_RELAY.start()
+
+        self.groups_joined = self.get_groups()
+        for group in self.groups_joined:
+            await self.channel_layer.group_add(group, self.channel_name)
+
+    async def disconnect(self, close_code):
+        for group in getattr(self, 'groups_joined', []):
+            await self.channel_layer.group_discard(group, self.channel_name)
+
+    async def live_message(self, event):
+        await self.send(text_data=json.dumps({
+            'kind': event['kind'],
+            'payload': event['payload'],
+        }))
+
+
+class PoolStatusConsumer(LiveGroupConsumer):
+    def get_groups(self):
+        return ['live_pool_status']
+
+
+class PoolStatsConsumer(LiveGroupConsumer):
+    def get_groups(self):
+        # Aggregated influx-backed metrics (netspace/mempool/xchprice) are not
+        # event-driven; only pool status + partial throughput are live for now.
+        return ['live_pool_status', 'live_partial_all']
+
+
+class BlocksConsumer(LiveGroupConsumer):
+    def get_groups(self):
+        return ['live_block_all']
+
+
+class RewardsConsumer(LiveGroupConsumer):
+    def get_groups(self):
+        return ['live_payout_all']
+
+
+class FarmersConsumer(LiveGroupConsumer):
+    def get_groups(self):
+        return ['live_partial_all', 'live_block_all']
+
+
+class PartialsConsumer(LiveGroupConsumer):
+    """Global, all-farmers live partial feed (`/partials` page)."""
+
+    def get_groups(self):
+        return ['live_partial_all']
+
+
+class FarmerConsumer(LiveGroupConsumer):
+    """Live feed scoped to a single farmer (`/farmer/{id}` page: overview,
+    partials, blocks, rewards, payouts tabs)."""
+
+    def get_groups(self):
+        launcher_id = self.scope['url_route']['kwargs']['launcher_id']
+        return [
+            f'live_partial_{launcher_id}',
+            f'live_block_{launcher_id}',
+            f'live_payout_{launcher_id}',
+        ]
+

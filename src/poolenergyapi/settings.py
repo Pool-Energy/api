@@ -175,6 +175,24 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 ASGI_APPLICATION = "poolenergyapi.asgi.application"
 
+if 'redis' in django_settings:
+    redis_settings = django_settings['redis']
+    REDIS_HOST = redis_settings.get('host', 'localhost')
+    REDIS_PORT = redis_settings.get('port', 6379)
+else:
+    REDIS_HOST = 'localhost'
+    REDIS_PORT = 6379
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [(REDIS_HOST, REDIS_PORT)],
+        },
+    },
+}
+
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
