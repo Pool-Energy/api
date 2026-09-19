@@ -295,10 +295,13 @@ class FarmersConsumer(LiveGroupConsumer):
 
 
 class PartialsConsumer(LiveGroupConsumer):
-    """Global, all-farmers live partial feed (`/partials` page)."""
+    """Global, all-farmers live partial feed (`/partials` page), grouped by
+    signage point. Also joins the blocks group so found blocks can be
+    correlated (best-effort, by timestamp proximity) to a signage point
+    row client-side."""
 
     def get_groups(self):
-        return ['live_partial_all']
+        return ['live_partial_all', 'live_block_all']
 
 
 class FarmerConsumer(LiveGroupConsumer):
