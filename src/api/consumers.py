@@ -3,12 +3,15 @@ import json
 import logging
 import os
 import subprocess
+import time
 
 import redis.asyncio as aioredis
 
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.layers import get_channel_layer
 from django.conf import settings
+
+from pool.store.redis_store import PENDING_PARTIALS_KEY
 
 
 logger = logging.getLogger('api.consumers')
@@ -256,6 +259,13 @@ class LiveGroupConsumer(AsyncWebsocketConsumer):
         for group in self.groups_joined:
             await self.channel_layer.group_add(group, self.channel_name)
 
+        await self.after_connect()
+
+    async def after_connect(self):
+        """Optional hook for subclasses to send an initial snapshot right
+        after the socket is accepted and groups are joined."""
+        pass
+
     async def disconnect(self, close_code):
         for group in getattr(self, 'groups_joined', []):
             await self.channel_layer.group_discard(group, self.channel_name)
@@ -300,8 +310,47 @@ class PartialsConsumer(LiveGroupConsumer):
     correlated (best-effort, by timestamp proximity) to a signage point
     row client-side."""
 
+    # Safety net: ignore snapshot entries older than this (should normally
+    # never happen since every pending partial is resolved within
+    # `partial_confirmation_delay`, but guards against stale/leaked entries
+    # e.g. after a `pool` crash that skipped cleanup).
+    SNAPSHOT_MAX_AGE_SECONDS = 900
+
     def get_groups(self):
         return ['live_partial_all', 'live_block_all']
+
+    async def after_connect(self):
+        # Send a snapshot of partials currently "to be validated" (accepted
+        # phase-1, awaiting phase-2 confirmation) so a client connecting
+        # mid-flight sees them as in-progress instead of only finding out
+        # about them once they resolve (with no matching "pending" seen).
+        try:
+            client = aioredis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
+            raw = await client.hgetall(PENDING_PARTIALS_KEY)
+            await client.aclose()
+        except Exception:
+            logger.error('Failed to fetch pending partials snapshot', exc_info=True)
+            return
+
+        if not raw:
+            return
+
+        now = time.time()
+        snapshot = []
+        for value in raw.values():
+            try:
+                payload = json.loads(value)
+            except ValueError:
+                continue
+            if now - payload.get('timestamp', 0) > self.SNAPSHOT_MAX_AGE_SECONDS:
+                continue
+            snapshot.append(payload)
+
+        if snapshot:
+            await self.send(text_data=json.dumps({
+                'kind': 'partial_snapshot',
+                'payload': snapshot,
+            }))
 
 
 class FarmerConsumer(LiveGroupConsumer):
