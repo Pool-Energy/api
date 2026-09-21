@@ -11,8 +11,6 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.layers import get_channel_layer
 from django.conf import settings
 
-from pool.store.redis_store import PENDING_PARTIALS_KEY
-
 
 logger = logging.getLogger('api.consumers')
 LOG_DIR = os.environ.get('POOL_LOG_DIR')
@@ -310,41 +308,42 @@ class PartialsConsumer(LiveGroupConsumer):
     correlated (best-effort, by timestamp proximity) to a signage point
     row client-side."""
 
-    # Safety net: ignore snapshot entries older than this (should normally
-    # never happen since every pending partial is resolved within
-    # `partial_confirmation_delay`, but guards against stale/leaked entries
-    # e.g. after a `pool` crash that skipped cleanup).
-    SNAPSHOT_MAX_AGE_SECONDS = 900
+    # Must stay in sync with `RECENT_PARTIALS_KEY`/`RECENT_PARTIALS_WINDOW_SECONDS`
+    # in pool/pool/store/redis_store.py (duplicated as a plain constant for the
+    # same reason as `PENDING_PARTIALS_KEY` above: independent deployments).
+    RECENT_PARTIALS_KEY = 'partials:recent_events'
+    RECENT_PARTIALS_WINDOW_SECONDS = 15 * 60
 
     def get_groups(self):
         return ['live_partial_all', 'live_block_all']
 
     async def after_connect(self):
-        # Send a snapshot of partials currently "to be validated" (accepted
-        # phase-1, awaiting phase-2 confirmation) so a client connecting
-        # mid-flight sees them as in-progress instead of only finding out
-        # about them once they resolve (with no matching "pending" seen).
+        # Backfill the last 15 minutes of partial activity (both "to be
+        # validated" and already-resolved events, oldest first) so a client
+        # connecting to this page sees recent signage-point activity
+        # immediately instead of starting from a blank table.
         try:
             client = aioredis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
-            raw = await client.hgetall(PENDING_PARTIALS_KEY)
+            now = time.time()
+            raw = await client.zrangebyscore(
+                self.RECENT_PARTIALS_KEY,
+                now - self.RECENT_PARTIALS_WINDOW_SECONDS,
+                '+inf',
+            )
             await client.aclose()
         except Exception:
-            logger.error('Failed to fetch pending partials snapshot', exc_info=True)
+            logger.error('Failed to fetch recent partials snapshot', exc_info=True)
             return
 
         if not raw:
             return
 
-        now = time.time()
         snapshot = []
-        for value in raw.values():
+        for value in raw:
             try:
-                payload = json.loads(value)
+                snapshot.append(json.loads(value))
             except ValueError:
                 continue
-            if now - payload.get('timestamp', 0) > self.SNAPSHOT_MAX_AGE_SECONDS:
-                continue
-            snapshot.append(payload)
 
         if snapshot:
             await self.send(text_data=json.dumps({
