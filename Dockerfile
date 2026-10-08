@@ -2,7 +2,7 @@
 # BUILD ENVIRONMENT #
 #####################
 
-FROM caddy:2.11.4-alpine AS caddy
+FROM caddy:2.11.6-alpine AS caddy
 
 #####################
 # FINAL ENVIRONMENT #
