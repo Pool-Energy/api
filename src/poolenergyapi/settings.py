@@ -188,6 +188,11 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
             'hosts': [(REDIS_HOST, REDIS_PORT)],
+            # Drop stale groups fast: when a consumer dies on a Redis timeout,
+            # its channel is left in the group and only purged on group_expiry.
+            # 300s caps the leak window; see consumers.LiveGroupConsumer which
+            # also self-purgers via group_discard on failure.
+            'group_expiry': 300,
         },
     },
 }
