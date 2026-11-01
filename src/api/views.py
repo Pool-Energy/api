@@ -658,7 +658,10 @@ class PayoutAddressViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = PayoutAddress.objects.all()
     serializer_class = PayoutAddressSerializer
     filterset_fields = ['payout', 'puzzle_hash', 'launcher']
-    ordering_fields = ['payout', 'launcher', 'confirmed_block_index', 'amount']
+    # `confirmed_block_index` lives on `Transaction`, not on `PayoutAddress`;
+    # whitelist the traversal path so ordering never builds a bogus order_by
+    # (which previously raised FieldError -> HTTP 500).
+    ordering_fields = ['payout', 'launcher', 'transaction__confirmed_block_index', 'amount']
     ordering = ['-payout', '-amount']
 
 

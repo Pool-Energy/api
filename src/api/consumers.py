@@ -241,6 +241,12 @@ class LiveGroupConsumer(AsyncWebsocketConsumer):
     Subclasses must implement `get_groups()`.
     """
 
+    # Retry parameters for group_add: Redis (and therefore the channel layer)
+    # can be temporarily unreachable. Surviving a short outage avoids the
+    # consumer being torn down without ever running disconnect().
+    GROUP_JOIN_RETRIES = 3
+    GROUP_JOIN_RETRY_DELAY = 1.0
+
     def get_groups(self) -> list:
         raise NotImplementedError
 
@@ -254,8 +260,29 @@ class LiveGroupConsumer(AsyncWebsocketConsumer):
             await REDIS_RELAY.start()
 
         self.groups_joined = self.get_groups()
-        for group in self.groups_joined:
-            await self.channel_layer.group_add(group, self.channel_name)
+        joined = False
+        last_error = None
+        for attempt in range(1, self.GROUP_JOIN_RETRIES + 1):
+            try:
+                for group in self.groups_joined:
+                    await self.channel_layer.group_add(group, self.channel_name)
+                joined = True
+                break
+            except Exception as exc:
+                last_error = exc
+                if attempt < self.GROUP_JOIN_RETRIES:
+                    await asyncio.sleep(self.GROUP_JOIN_RETRY_DELAY)
+
+        if not joined:
+            # Close cleanly so the framework still dispatches disconnect(); the
+            # channel never lingers in a half-joined group.
+            logger.error(
+                'Failed to join live groups %r after %d attempt(s)',
+                self.groups_joined, self.GROUP_JOIN_RETRIES,
+                exc_info=last_error,
+            )
+            await self.close()
+            return
 
         await self.after_connect()
 
@@ -264,15 +291,39 @@ class LiveGroupConsumer(AsyncWebsocketConsumer):
         after the socket is accepted and groups are joined."""
         pass
 
-    async def disconnect(self, close_code):
+    async def _leave_groups(self):
+        """Remove this channel from every joined group. Never raises so callers
+        (disconnect, failed forward) always get a chance to purge the channel
+        instead of letting it leak in the group until group_expiry."""
         for group in getattr(self, 'groups_joined', []):
-            await self.channel_layer.group_discard(group, self.channel_name)
+            try:
+                await self.channel_layer.group_discard(group, self.channel_name)
+            except Exception:
+                logger.warning(
+                    'Failed to leave live group %r for channel %r',
+                    group, self.channel_name, exc_info=True,
+                )
+
+    async def disconnect(self, close_code):
+        await self._leave_groups()
 
     async def live_message(self, event):
-        await self.send(text_data=json.dumps({
-            'kind': event['kind'],
-            'payload': event['payload'],
-        }))
+        try:
+            await self.send(text_data=json.dumps({
+                'kind': event['kind'],
+                'payload': event['payload'],
+            }))
+        except Exception:
+            # Forwarding failed (e.g. ClientDisconnected because the browser
+            # socket is gone, or a Redis timeout while dispatching). Swallow it
+            # so the receive loop is not killed (which would prevent
+            # disconnect() from ever running) and purge the dead channel from
+            # the groups immediately.
+            logger.warning(
+                'Failed to forward live event to channel %r; leaving groups',
+                self.channel_name, exc_info=True,
+            )
+            await self._leave_groups()
 
 
 class PoolStatusConsumer(LiveGroupConsumer):
