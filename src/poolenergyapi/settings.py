@@ -1,4 +1,9 @@
 from pathlib import Path
+
+from redis import exceptions as redis_exceptions
+from redis.asyncio.retry import Retry
+from redis.backoff import ExponentialWithJitterBackoff
+
 from poolenergyapi.utils import custom_settings
 
 
@@ -185,13 +190,34 @@ else:
 
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'BACKEND': 'api.channel_layer.ResilientRedisChannelLayer',
         'CONFIG': {
-            'hosts': [(REDIS_HOST, REDIS_PORT)],
+            'hosts': [{
+                'host': REDIS_HOST,
+                'port': REDIS_PORT,
+                # Bound socket waits so a sluggish chia-redis surfaces quickly
+                # and is retried below instead of blocking the worker forever.
+                'socket_connect_timeout': 5,
+                'socket_timeout': 10,
+                # Native, silent retry: redis-py re-issues commands that time
+                # out against chia-redis with exponential jittered backoff
+                # instead of letting the TimeoutError reach the consumer loop.
+                # The asyncio Retry type is required by the asyncio client.
+                'retry_on_error': [
+                    redis_exceptions.TimeoutError,
+                    redis_exceptions.ConnectionError,
+                ],
+                'retry': Retry(
+                    ExponentialWithJitterBackoff(base=0.5, cap=5),
+                    retries=5,
+                ),
+            }],
             # Drop stale groups fast: when a consumer dies on a Redis timeout,
             # its channel is left in the group and only purged on group_expiry.
             # 300s caps the leak window; see consumers.LiveGroupConsumer which
-            # also self-purgers via group_discard on failure.
+            # also self-purgers via group_discard on failure, and
+            # channel_layer.ResilientRedisChannelLayer which keeps consumers
+            # alive on transient Redis errors.
             'group_expiry': 300,
         },
     },
